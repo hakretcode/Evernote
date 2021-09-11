@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvc
+package com.hakretcode.evernote.mvp.add.presentation
 
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -10,29 +10,29 @@ import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.hakretcode.evernote.mvc.model.Note
-import com.hakretcode.evernote.mvc.model.RemoteDataSource
+import com.hakretcode.evernote.mvp.R
+import com.hakretcode.evernote.mvp.add.Add
+import com.hakretcode.evernote.mvp.model.Note
+import com.hakretcode.evernote.mvp.model.RemoteDataSource
+import com.hakretcode.evernote.mvp.model.SimplifiedDisposableObserver
+import io.reactivex.Observer
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_form.*
 import kotlinx.android.synthetic.main.content_form.*
-import retrofit2.Callback
-import retrofit2.Response
 
-/**
- *
- * Setembro, 24 2019
- * @author suporte@moonjava.com.br (Tiago Aguiar).
- */
-class FormActivity : AppCompatActivity(), TextWatcher {
-
+class FormActivity : AppCompatActivity(), TextWatcher, Add.View {
+    private lateinit var presenter: Add.Presenter
     private var toSave: Boolean = false
     private var noteId: Int? = null
-
-    private val dataSource = RemoteDataSource()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_form)
 
+        presenter = AddPresenter(this)
         noteId = intent.extras?.getInt("noteId")
 
         setupViews()
@@ -41,13 +41,15 @@ class FormActivity : AppCompatActivity(), TextWatcher {
     override fun onStart() {
         super.onStart()
         noteId?.let {
-            getNote(it)
+            presenter.getNote(it)
         }
     }
 
-    private fun getNote(noteId: Int) {
-        dataSource.getNote(noteId, callback)
+    override fun onStop() {
+        super.onStop()
+        presenter.stop()
     }
+
 
     private fun setupViews() {
         setSupportActionBar(toolbar)
@@ -72,79 +74,15 @@ class FormActivity : AppCompatActivity(), TextWatcher {
         }
     }
 
-
-    private val callback: Callback<Note>
-        get() = object : Callback<Note> {
-
-            override fun onFailure(call: retrofit2.Call<Note>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao carregar nota")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<Note>,
-                response: Response<Note>
-            ) {
-                if (response.isSuccessful) {
-                    val note = response.body()
-                    displayNote(note)
-                }
-            }
-
-        }
-
-    private val callbackCreate: Callback<Note>
-        get() = object : Callback<Note> {
-
-            override fun onFailure(call: retrofit2.Call<Note>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao criar nota")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<Note>,
-                response: Response<Note>
-            ) {
-                if (response.isSuccessful) {
-                    finish()
-                }
-            }
-
-        }
-
-    fun displayError(message: String) {
-        showToast(message)
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
-
-    private fun displayNote(note: Note?) {
-        // progress
-        if (note != null) {
-            note_title.setText(note.title)
-            note_editor.setText(note.body)
-        } else {
-            // no data
-        }
-    }
-
-
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == android.R.id.home) {
-            return if (toSave && noteId == null) {
-                val note = Note()
-                note.title = note_title.text.toString()
-                note.body = note_editor.text.toString()
-
-                dataSource.createNote(note, callbackCreate)
-
-                true
-            } else {
-                finish()
-                true
-            }
+            if (toSave && noteId == null) {
+                presenter.createNote(
+                    note_title.text.toString(),
+                    note_editor.text.toString()
+                )
+            } else returnToHome()
+            return true
         }
         return super.onOptionsItemSelected(item)
     }
@@ -164,6 +102,23 @@ class FormActivity : AppCompatActivity(), TextWatcher {
     }
 
     override fun afterTextChanged(editable: Editable) {
+    }
+
+    override fun displayNote(title: String, body: String) {
+        note_title.setText(title)
+        note_editor.setText(body)
+    }
+
+    override fun returnToHome() {
+        finish()
+    }
+
+    override fun displayError(message: String) {
+        showToast(message)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
     }
 
 }

@@ -1,31 +1,18 @@
-package com.hakretcode.evernote.mvc.model
+package com.hakretcode.evernote.mvvm.model
 
-import com.hakretcode.evernote.mvc.network.RetrofitClient
-import retrofit2.Callback
+import com.hakretcode.evernote.mvvm.network.RetrofitClient
+import io.reactivex.Observable
 
-/**
- *
- * Setembro, 24 2019
- * @author suporte@moonjava.com.br (Tiago Aguiar).
- */
+
 class RemoteDataSource {
 
-    fun listNotes(callback: Callback<List<Note>>) {
-        RetrofitClient.evernoteApi
-            .listNotes()
-            .enqueue(callback)
-    }
+    fun listNotes(): Observable<List<Note>> = RetrofitClient.evernoteApi.listNotes()
 
-    fun getNote(noteId: Int, callback: Callback<Note>) {
-        RetrofitClient.evernoteApi
-            .getNote(noteId)
-            .enqueue(callback)
-    }
+    fun getNote(noteId: Int): Observable<Note> = RetrofitClient.evernoteApi.getNote(noteId)
 
-    fun createNote(note: Note, callback: Callback<Note>) {
-        RetrofitClient.evernoteApi
-            .createNote(note)
-            .enqueue(callback)
-    }
+    fun createNote(note: Note): Observable<Note> = RetrofitClient.evernoteApi.createNote(note)
 
+    fun createNoteFromUser(user: User) {
+        user.showNoteTitle()
+    }
 }

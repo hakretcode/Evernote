@@ -3,8 +3,8 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    tools:showIn="@layout/content_home"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    tools:showIn="@layout/content_home">
 
     <TextView
         android:id="@+id/note_date"
@@ -28,8 +28,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="12dp"
-        android:maxLines="3"
         android:ellipsize="marquee"
+        android:maxLines="3"
         tools:text="http://google.com http://youtube.com Estruturas de classes http://google.com http://youtube.com Estruturas de classes http://google.com http://youtube.com Estruturas de classes" />
 
 </LinearLayout>

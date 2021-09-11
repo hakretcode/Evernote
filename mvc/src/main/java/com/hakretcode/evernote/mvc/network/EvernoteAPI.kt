@@ -1,27 +1,23 @@
 package com.hakretcode.evernote.mvc.network
 
 import com.hakretcode.evernote.mvc.model.Note
-import retrofit2.Call
+import io.reactivex.Observable
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
 import retrofit2.http.Path
 
-/**
- *
- * Setembro, 24 2019
- * @author suporte@moonjava.com.br (Tiago Aguiar).
- */
+
 
 interface EvernoteAPI {
 
     @GET("/")
-    fun listNotes(): Call<List<Note>>
+    fun listNotes(): Observable<List<Note>>
 
     @GET("/{id}")
-    fun getNote(@Path("id") id: Int): Call<Note>
+    fun getNote(@Path("id") id: Int): Observable<Note>
 
     @POST("/create")
-    fun createNote(@Body note: Note): Call<Note>
+    fun createNote(@Body note: Note): Observable<Note>
 
 }

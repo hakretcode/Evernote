@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvc
+package com.hakretcode.evernote.mvp.home.presentation
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,30 +10,31 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hakretcode.evernote.mvc.model.Note
-import com.hakretcode.evernote.mvc.model.RemoteDataSource
 import com.google.android.material.navigation.NavigationView
+import com.hakretcode.evernote.mvp.add.presentation.FormActivity
+import com.hakretcode.evernote.mvp.R
+import com.hakretcode.evernote.mvp.home.Home
+import com.hakretcode.evernote.mvp.model.Note
+import com.hakretcode.evernote.mvp.model.RemoteDataSource
 import kotlinx.android.synthetic.main.activity_home.*
-import kotlinx.android.synthetic.main.app_bar_home.*
+import kotlinx.android.synthetic.main.app_bar_home.fab
+import kotlinx.android.synthetic.main.app_bar_home.toolbar
 import kotlinx.android.synthetic.main.content_home.*
-import retrofit2.Callback
-import retrofit2.Response
 
-
-class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-
-    private val dataSource = RemoteDataSource()
+class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener, Home.View {
+    private lateinit var presenter: HomePresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
+
+        presenter = HomePresenter(this, RemoteDataSource())
 
         setupViews()
     }
 
     private fun setupViews() {
         setSupportActionBar(toolbar)
-
         val toggle = ActionBarDrawerToggle(
             this,
             drawer_layout,
@@ -57,58 +58,17 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onStart() {
         super.onStart()
-        dataSource.listNotes(callback)
+        presenter.getAllNotes()
     }
 
-    private val callback: Callback<List<Note>>
-        get() = object : Callback<List<Note>> {
-
-            override fun onFailure(call: retrofit2.Call<List<Note>>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao carregar notas")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<List<Note>>,
-                response: Response<List<Note>>
-            ) {
-                if (response.isSuccessful) {
-                    val notes = response.body()
-                    notes?.let {
-                        displayNotes(it)
-                    }
-                }
-            }
-
-        }
-
-    fun displayError(message: String) {
-        showToast(message)
-    }
-
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
-
-    private fun displayNotes(notes: List<Note>) {
-        // progress
-        if (notes.isNotEmpty()) {
-            home_recycler_view.adapter = NoteAdapter(notes) { note ->
-                val intent = Intent(baseContext, FormActivity::class.java)
-                intent.putExtra("noteId", note.id)
-                startActivity(intent)
-            }
-        } else {
-            // no data
-        }
+    override fun onStop() {
+        super.onStop()
+        presenter.stop()
     }
 
     override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
+        if (drawer_layout.isDrawerOpen(GravityCompat.START))
+            drawer_layout.closeDrawer(GravityCompat.START) else super.onBackPressed()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -134,4 +94,23 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         return true
     }
 
+    override fun displayEmptyNote() {
+        showToast("Nenhuma nota no servidor")
+    }
+
+    override fun displayNotes(notes: List<Note>) {
+        home_recycler_view.adapter = NoteAdapter(notes) { note ->
+            val intent = Intent(baseContext, FormActivity::class.java)
+            intent.putExtra("noteId", note.id)
+            startActivity(intent)
+        }
+    }
+
+    override fun displayError(message: String) {
+        showToast(message)
+    }
+
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+    }
 }

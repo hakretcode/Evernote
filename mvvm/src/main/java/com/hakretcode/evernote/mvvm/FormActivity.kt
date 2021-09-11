@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvc
+package com.hakretcode.evernote.mvvm
 
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffColorFilter
@@ -10,24 +10,44 @@ import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
-import com.hakretcode.evernote.mvc.model.Note
-import com.hakretcode.evernote.mvc.model.RemoteDataSource
+import com.hakretcode.evernote.mvvm.model.Note
+import com.hakretcode.evernote.mvvm.model.RemoteDataSource
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_form.*
 import kotlinx.android.synthetic.main.content_form.*
-import retrofit2.Callback
-import retrofit2.Response
 
-/**
- *
- * Setembro, 24 2019
- * @author suporte@moonjava.com.br (Tiago Aguiar).
- */
+
 class FormActivity : AppCompatActivity(), TextWatcher {
-
+    private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private var toSave: Boolean = false
     private var noteId: Int? = null
 
     private val dataSource = RemoteDataSource()
+    private val displayNoteObserver: DisposableObserver<Note> = object :
+        DisposableObserver<Note>() {
+        override fun onNext(t: Note) = displayNote(t)
+
+        override fun onError(e: Throwable) {
+            e.printStackTrace()
+            displayError("Erro ao carregar nota")
+        }
+
+        override fun onComplete() {}
+    }
+    private val createNoteObserver: DisposableObserver<Note> = object :
+        DisposableObserver<Note>() {
+        override fun onNext(t: Note) = finish()
+
+        override fun onError(e: Throwable) {
+            e.printStackTrace()
+            displayError("Erro ao criar notas")
+        }
+
+        override fun onComplete() {}
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,8 +65,27 @@ class FormActivity : AppCompatActivity(), TextWatcher {
         }
     }
 
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.clear()
+    }
+
     private fun getNote(noteId: Int) {
-        dataSource.getNote(noteId, callback)
+        compositeDisposable.add(
+            dataSource.getNote(noteId)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(displayNoteObserver)
+        )
+    }
+
+    private fun createNote(note: Note) {
+        compositeDisposable.add(
+            dataSource.createNote(note)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(createNoteObserver)
+        )
     }
 
     private fun setupViews() {
@@ -71,46 +110,6 @@ class FormActivity : AppCompatActivity(), TextWatcher {
             it.setDisplayHomeAsUpEnabled(true)
         }
     }
-
-
-    private val callback: Callback<Note>
-        get() = object : Callback<Note> {
-
-            override fun onFailure(call: retrofit2.Call<Note>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao carregar nota")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<Note>,
-                response: Response<Note>
-            ) {
-                if (response.isSuccessful) {
-                    val note = response.body()
-                    displayNote(note)
-                }
-            }
-
-        }
-
-    private val callbackCreate: Callback<Note>
-        get() = object : Callback<Note> {
-
-            override fun onFailure(call: retrofit2.Call<Note>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao criar nota")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<Note>,
-                response: Response<Note>
-            ) {
-                if (response.isSuccessful) {
-                    finish()
-                }
-            }
-
-        }
 
     fun displayError(message: String) {
         showToast(message)
@@ -138,7 +137,7 @@ class FormActivity : AppCompatActivity(), TextWatcher {
                 note.title = note_title.text.toString()
                 note.body = note_editor.text.toString()
 
-                dataSource.createNote(note, callbackCreate)
+                createNote(note)
 
                 true
             } else {

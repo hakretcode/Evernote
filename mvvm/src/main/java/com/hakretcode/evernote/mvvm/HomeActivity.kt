@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvc
+package com.hakretcode.evernote.mvvm
 
 import android.content.Intent
 import android.os.Bundle
@@ -10,19 +10,36 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.hakretcode.evernote.mvc.model.Note
-import com.hakretcode.evernote.mvc.model.RemoteDataSource
 import com.google.android.material.navigation.NavigationView
+import com.hakretcode.evernote.mvvm.model.Note
+import com.hakretcode.evernote.mvvm.model.RemoteDataSource
+import com.hakretcode.evernote.mvvm.model.User
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.CompositeDisposable
+import io.reactivex.observers.DisposableObserver
+import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_home.*
 import kotlinx.android.synthetic.main.content_home.*
-import retrofit2.Callback
-import retrofit2.Response
 
 
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
+    private val displayNotesObserver: DisposableObserver<List<Note>> = object :
+        DisposableObserver<List<Note>>() {
+        override fun onNext(t: List<Note>) {
+            displayNotes(t)
+        }
+
+        override fun onError(e: Throwable) {
+            e.printStackTrace()
+            displayError("Erro ao carregar notas")
+        }
+
+        override fun onComplete() {}
+    }
 
     private val dataSource = RemoteDataSource()
+    private val compositeDisposable = CompositeDisposable()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,30 +74,23 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
     override fun onStart() {
         super.onStart()
-        dataSource.listNotes(callback)
+        getAllNotes()
+        dataSource.createNoteFromUser(User(Note()))
     }
 
-    private val callback: Callback<List<Note>>
-        get() = object : Callback<List<Note>> {
+    override fun onStop() {
+        super.onStop()
+        compositeDisposable.clear()
+    }
 
-            override fun onFailure(call: retrofit2.Call<List<Note>>, t: Throwable) {
-                t.printStackTrace()
-                displayError("Erro ao carregar notas")
-            }
-
-            override fun onResponse(
-                call: retrofit2.Call<List<Note>>,
-                response: Response<List<Note>>
-            ) {
-                if (response.isSuccessful) {
-                    val notes = response.body()
-                    notes?.let {
-                        displayNotes(it)
-                    }
-                }
-            }
-
-        }
+    private fun getAllNotes() {
+        compositeDisposable.add(
+            dataSource.listNotes()
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribeWith(displayNotesObserver)
+        )
+    }
 
     fun displayError(message: String) {
         showToast(message)
@@ -104,11 +114,8 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
     }
 
     override fun onBackPressed() {
-        if (drawer_layout.isDrawerOpen(GravityCompat.START)) {
-            drawer_layout.closeDrawer(GravityCompat.START)
-        } else {
-            super.onBackPressed()
-        }
+        if (drawer_layout.isDrawerOpen(GravityCompat.START))
+            drawer_layout.closeDrawer(GravityCompat.START) else super.onBackPressed()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -133,5 +140,4 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
     }
-
 }
