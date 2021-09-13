@@ -1,45 +1,31 @@
-package com.hakretcode.evernote.mvvm
+package com.hakretcode.evernote.mvvm.view.activities
 
 import android.content.Intent
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Toast
+import androidx.activity.viewModels
 import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.GravityCompat
+import androidx.lifecycle.Observer
 import androidx.recyclerview.widget.DividerItemDecoration
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.google.android.material.navigation.NavigationView
-import com.hakretcode.evernote.mvvm.model.Note
-import com.hakretcode.evernote.mvvm.model.RemoteDataSource
-import com.hakretcode.evernote.mvvm.model.User
+import com.hakretcode.evernote.mvvm.R
+import com.hakretcode.evernote.mvvm.data.model.Note
+import com.hakretcode.evernote.mvvm.view.adapters.NoteAdapter
+import com.hakretcode.evernote.mvvm.viewmodel.HomeViewModel
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.CompositeDisposable
-import io.reactivex.observers.DisposableObserver
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_home.*
 import kotlinx.android.synthetic.main.app_bar_home.*
 import kotlinx.android.synthetic.main.content_home.*
 
-
 class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelectedListener {
-    private val displayNotesObserver: DisposableObserver<List<Note>> = object :
-        DisposableObserver<List<Note>>() {
-        override fun onNext(t: List<Note>) {
-            displayNotes(t)
-        }
-
-        override fun onError(e: Throwable) {
-            e.printStackTrace()
-            displayError("Erro ao carregar notas")
-        }
-
-        override fun onComplete() {}
-    }
-
-    private val dataSource = RemoteDataSource()
-    private val compositeDisposable = CompositeDisposable()
+    private val viewModel by viewModels<HomeViewModel>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,40 +51,27 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
         val divider = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         home_recycler_view.addItemDecoration(divider)
         home_recycler_view.layoutManager = LinearLayoutManager(this)
-
-        fab.setOnClickListener {
-            val intent = Intent(baseContext, FormActivity::class.java)
-            startActivity(intent)
-        }
     }
 
     override fun onStart() {
         super.onStart()
-        getAllNotes()
-        dataSource.createNoteFromUser(User(Note()))
+        observeAllNotes()
     }
 
     override fun onStop() {
         super.onStop()
-        compositeDisposable.clear()
+//        compositeDisposable.clear()
     }
 
-    private fun getAllNotes() {
-        compositeDisposable.add(
-            dataSource.listNotes()
-                .subscribeOn(Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribeWith(displayNotesObserver)
-        )
+    private fun observeAllNotes() {
+        viewModel.getAllNotes().observe(this, { notes ->
+            notes?.apply { displayNotes(notes) } ?: displayError("Error")
+        })
     }
 
-    fun displayError(message: String) {
-        showToast(message)
-    }
+    private fun displayError(message: String) = showToast(message)
 
-    private fun showToast(message: String) {
-        Toast.makeText(this, message, Toast.LENGTH_LONG).show()
-    }
+    private fun showToast(message: String) = Toast.makeText(this, message, Toast.LENGTH_LONG).show()
 
     private fun displayNotes(notes: List<Note>) {
         // progress
@@ -139,5 +112,10 @@ class HomeActivity : AppCompatActivity(), NavigationView.OnNavigationItemSelecte
 
         drawer_layout.closeDrawer(GravityCompat.START)
         return true
+    }
+
+    fun fabClicked(v: View) {
+        val intent = Intent(baseContext, FormActivity::class.java)
+        startActivity(intent)
     }
 }

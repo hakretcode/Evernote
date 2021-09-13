@@ -1,6 +1,6 @@
-package com.hakretcode.evernote.mvvm.network
+package com.hakretcode.evernote.mvvm.data.network
 
-import com.hakretcode.evernote.mvvm.model.Note
+import com.hakretcode.evernote.mvvm.data.model.Note
 import io.reactivex.Observable
 import retrofit2.http.Body
 import retrofit2.http.GET

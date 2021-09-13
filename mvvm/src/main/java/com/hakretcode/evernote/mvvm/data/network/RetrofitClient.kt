@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvvm.network
+package com.hakretcode.evernote.mvvm.data.network
 
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory

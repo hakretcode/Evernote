@@ -1,21 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<layout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    tools:context=".view.activities.FormActivity"
+    tools:showIn="@layout/activity_form">
+
+    <data>
+        <variable
+            name="viewModelPass"
+            type="com.hakretcode.evernote.mvvm.viewmodel.AddViewModel" />
+    </data>
+
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_marginStart="8dp"
     android:layout_marginEnd="8dp"
     android:orientation="vertical"
-    app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context=".FormActivity"
-    tools:showIn="@layout/activity_form">
+    app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/note_title"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@null"
+        android:text="@={viewModelPass.title}"
         android:textSize="16sp"
         android:textStyle="bold"
         tools:text="aws s3 sync command line" />
@@ -64,6 +74,7 @@
 
     <androidx.appcompat.widget.AppCompatEditText
         android:id="@+id/note_editor"
+        android:text="@={viewModelPass.body}"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="12dp"
@@ -72,3 +83,4 @@
         android:inputType="textMultiLine" />
 
 </LinearLayout>
+</layout>

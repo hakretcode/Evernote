@@ -1,4 +1,4 @@
-package com.hakretcode.evernote.mvvm.model
+package com.hakretcode.evernote.mvvm.data.model
 
 
 data class Note(
@@ -7,7 +7,4 @@ data class Note(
     var desc: String? = null,
     var date: String? = null,
     var body: String? = null
-) {
-    constructor() : this(1, "Nota Test")
-
-}
+)

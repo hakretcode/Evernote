@@ -33,8 +33,4 @@ class HomePresenter(private val view: Home.View, private val dataSource: RemoteD
     override fun stop() {
         compositeDisposable.clear()
     }
-
-    companion object {
-        const val TAG = "HomePresenter"
-    }
 }
