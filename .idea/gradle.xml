@@ -12,8 +12,10 @@
           <set>
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/mvc" />
+            <option value="$PROJECT_DIR$/mvi" />
             <option value="$PROJECT_DIR$/mvp" />
             <option value="$PROJECT_DIR$/mvvm" />
+            <option value="$PROJECT_DIR$/viper" />
           </set>
         </option>
         <option name="resolveModulePerSourceSet" value="false" />

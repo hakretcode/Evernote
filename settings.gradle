@@ -1,4 +1,6 @@
 include ':mvc'
 include ':mvp'
 include ':mvvm'
+include ':viper'
+include ':mvi'
 rootProject.name='EvernoteKt'

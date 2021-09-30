@@ -10,11 +10,16 @@
       <map>
         <entry key="mvc/src/main/res/layout/activity_home.xml" value="0.2359375" />
         <entry key="mvc/src/main/res/layout/app_bar_home.xml" value="0.25" />
+        <entry key="mvi/src/main/res/layout/activity_home.xml" value="0.1" />
+        <entry key="mvi/src/main/res/layout/list_item_note.xml" value="0.18" />
         <entry key="mvvm/src/main/res/layout/activity_form.xml" value="0.303125" />
         <entry key="mvvm/src/main/res/layout/activity_home.xml" value="0.18611111111111112" />
         <entry key="mvvm/src/main/res/layout/app_bar_home.xml" value="0.303125" />
         <entry key="mvvm/src/main/res/layout/content_form.xml" value="0.25" />
         <entry key="mvvm/src/main/res/layout/list_item_note.xml" value="0.303125" />
+        <entry key="viper/src/main/res/layout/activity_form.xml" value="0.21510416666666668" />
+        <entry key="viper/src/main/res/layout/app_bar_home.xml" value="0.1" />
+        <entry key="viper/src/main/res/layout/content_form.xml" value="0.1" />
       </map>
     </option>
   </component>
